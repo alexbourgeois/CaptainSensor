@@ -18,15 +18,13 @@ public class SensorManager : MonoBehaviour
     public GameObject GyroscopeCheckGameObject;
     public GameObject TouchCheckGameObject;
 
-    public GameObject ConsoleHandler;
-
     //OSC 
     private OSCClient _oscSender;
     public string TargetIp = "127.0.0.1";
-    public int TargetPort = 7000;
+    public int TargetPort = 8000;
 
     //Debug
-    public GameObject DebugHolder;
+    public GameObject ConsoleHandler;
     public bool IsDebug;
     private ConsoleManager Console;
 
@@ -39,45 +37,37 @@ public class SensorManager : MonoBehaviour
     {
         _oscSender = new OSCClient(IPAddress.Parse(TargetIp), TargetPort);
         Console = ConsoleHandler.GetComponent<ConsoleManager>();
+        IsDebug = true;
     }
 
     public void Connect()
     {
-        if (_oscSender == null)
-        {
-            _oscSender = new OSCClient(IPAddress.Parse(TargetIp), TargetPort);
-            _oscSender.Connect();
-            try
-            {
-                _oscSender.Connect();
-                Console.Log("Connected");
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e.Message);
-            }
-        }
-        else
-        {
-            Reconnect();
-        }
-    }
-
-    private void Reconnect()
-    {
-        _oscSender.Close();
-        Console.Log("Connection closed");
-
         _oscSender = new OSCClient(IPAddress.Parse(TargetIp), TargetPort);
         try
         {
             _oscSender.Connect();
             Console.Log("Connected");
+
+            var message = new OSCMessage("/device/screen");
+            message.Append(Screen.width);
+            message.Append(Screen.height);
+            _oscSender.Send(message);
+
+            if (IsDebug)
+                Console.Log("Screen : " + Screen.width + "*" + Screen.height);
         }
         catch (Exception e)
         {
             Debug.Log(e.Message);
         }
+    }
+
+    private void Reconnect()
+    {
+        if (_oscSender != null)
+            _oscSender.Close();
+
+        Connect();
     }
 
     #region **event handler**
@@ -104,7 +94,6 @@ public class SensorManager : MonoBehaviour
     public void OnDebugChanged()
     {
         IsDebug = !IsDebug;
-        DebugHolder.SetActive(IsDebug);
     }
     #endregion
 

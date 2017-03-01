@@ -12,12 +12,17 @@ public class ConsoleManager : MonoBehaviour
 	void Start ()
 	{
 	    _console = GetComponent<InputField>();
-	    _console.text = "[Log]";
+	    _console.text = "[Log] \n";
 
 	}
 
+    public void Clear()
+    {
+        _console.text = "";
+    }
+
     public void Log(string str)
     {
-        _console.text = _console.text +" \n" + str;
+        _console.text = _console.text + str + "\n";
     }
 }
