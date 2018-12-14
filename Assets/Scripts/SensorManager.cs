@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.Networking.NetworkSystem;
 using UnityEngine.UI;
@@ -116,9 +115,10 @@ public class SensorManager : MonoBehaviour
         {
             Input.gyro.enabled = true;
             var message = new OSCMessage("/device/gyroscope");
-            message.Append(Input.gyro.rotationRate.x);
-            message.Append(Input.gyro.rotationRate.y);
-            message.Append(Input.gyro.rotationRate.z);
+            message.Append(Input.gyro.attitude.x);
+            message.Append(Input.gyro.attitude.y);
+            message.Append(Input.gyro.attitude.z);
+            message.Append(Input.gyro.attitude.w);
             _oscSender.Send(message);
 
             if (IsDebug)
