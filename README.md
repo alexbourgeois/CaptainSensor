@@ -1,18 +1,15 @@
 # CaptainSensor
-This project is an Android application sending sensor data over OSC made with Unity.
-
+This application sends phone sensors through OSC.
 
 # Available sensor
-Actually, 3 data sources are available :
+Three data sources are available :
 
 * Accelerometer
 * Gyroscope
 * Touch (multitouch included)
 
 # OSC protocol syntax  
-* Accelerometer : "\device\accelerometer"
-* Gyroscope : "\device\gyroscope"
-* Touch : "\device\touch" + touch index
+Specify your OSC address foreach sensor
 
 # Unity
-Created with Unity 5.5.2
+Created with Unity 2018.3.0f2
