@@ -9,51 +9,72 @@ using UnityOSC;
 
 public class SensorManager : MonoBehaviour
 {
-    //External source
-    public GameObject IPAddressSource;
-    public GameObject PortSource;
 
-    public GameObject AccelerometerCheckGameObject;
-    public GameObject GyroscopeCheckGameObject;
-    public GameObject TouchCheckGameObject;
+    private string _targetIp = "127.0.0.1";
+    public string TargetIp
+    {
+        get
+        {
+            return _targetIp;
+        }
+        set
+        {
+            _targetIp = value;
+            Connect();
+        }
+    }
 
-    //OSC 
-    private OSCClient _oscSender;
-    public string TargetIp = "127.0.0.1";
-    public int TargetPort = 8000;
+    private int _targetPort = 8000;
+    public int TargetPort
+    {
+        get
+        {
+            return _targetPort;
+        }
+        set
+        {
+            _targetPort = value;
+            Connect();
+        }
+    }
 
-    //Debug
-    public GameObject ConsoleHandler;
-    public bool IsDebug;
-    private ConsoleManager Console;
+    public bool sendAccelerometer;
+    public bool sendGyroscope;
+    public bool sendTouch;
 
-    //Sensor
-    private bool _isTouchSet, _isAccelerometerSet, _isGyroscopeSet;
-    
-    
-    // Use this for initialization
+    public string accelerometerValue;
+    public string gyroscopeValue;
+    public int touchCount;
+
+    public string accelerometerOSCAddress = "/device/accelerometer";
+    public string gyroscopeOSCAddress = "/device/gyroscope";
+    public string touchOSCAddress = "/device/touch/";
+
+    private string OSCClientName = "CaptainSensor";
+
     void Start ()
     {
-        _oscSender = new OSCClient(IPAddress.Parse(TargetIp), TargetPort);
-        Console = ConsoleHandler.GetComponent<ConsoleManager>();
-        IsDebug = true;
+        Connect();
     }
 
     public void Connect()
     {
-        _oscSender = new OSCClient(IPAddress.Parse(TargetIp), TargetPort);
+        if(OSCMaster.Clients.ContainsKey(OSCClientName))
+        {
+            OSCMaster.RemoveClient(OSCClientName);
+        }
+        OSCMaster.CreateClient(OSCClientName, IPAddress.Parse(TargetIp), TargetPort);
+        Debug.Log("Connected on " + TargetIp + ":" + TargetPort);
+
         try
         {
-            _oscSender.Connect();
-            Console.Log("Connected");
-
             var message = new OSCMessage("/device/screen");
             message.Append(Screen.width);
             message.Append(Screen.height);
-            _oscSender.Send(message);
 
-            if (IsDebug)
-                Console.Log("Screen : " + Screen.width + "*" + Screen.height);
+            OSCMaster.SendMessageUsingClient(OSCClientName, message);
+
+            Debug.Log("Screen : " + Screen.width + "*" + Screen.height);
         }
         catch (Exception e)
         {
@@ -61,82 +82,46 @@ public class SensorManager : MonoBehaviour
         }
     }
 
-    private void Reconnect()
-    {
-        if (_oscSender != null)
-            _oscSender.Close();
-
-        Connect();
-    }
-
-    #region **event handler**
-    public void OnIpAddressChanged()
-    {
-        TargetIp = IPAddressSource.GetComponent<Text>().text;
-    }
-    public void OnAccelerometerChanged()
-    {
-        _isAccelerometerSet = AccelerometerCheckGameObject.GetComponent<Toggle>().isOn;
-    }
-    public void OnGyroscopeChanged()
-    {
-        _isGyroscopeSet = GyroscopeCheckGameObject.GetComponent<Toggle>().isOn;
-    }
-    public void OnTouchChanged()
-    {
-        _isTouchSet = TouchCheckGameObject.GetComponent<Toggle>().isOn;
-    }
-    public void OnPortChanged()
-    {
-        TargetPort = int.Parse(PortSource.GetComponent<Text>().text);
-    }
-    public void OnDebugChanged()
-    {
-        IsDebug = !IsDebug;
-    }
-    #endregion
-
-    // Update is called once per frame
     void Update ()
     {
-        if (_isAccelerometerSet)
+        if (sendAccelerometer)
         {
-            var message = new OSCMessage("/device/accelerometer");
+            var message = new OSCMessage(accelerometerOSCAddress);
             message.Append(Input.acceleration.x);
             message.Append(Input.acceleration.y);
             message.Append(Input.acceleration.z);
-            _oscSender.Send(message);
+            OSCMaster.SendMessageUsingClient(OSCClientName, message);
 
-            if (IsDebug)
-                Console.Log("Accelerometer : " + Input.acceleration);
+            accelerometerValue = Input.acceleration.ToString();
         }
 
-        if (_isGyroscopeSet)
+        if (sendGyroscope)
         {
             Input.gyro.enabled = true;
-            var message = new OSCMessage("/device/gyroscope");
+            var message = new OSCMessage(gyroscopeOSCAddress);
             message.Append(Input.gyro.attitude.x);
             message.Append(Input.gyro.attitude.y);
             message.Append(Input.gyro.attitude.z);
             message.Append(Input.gyro.attitude.w);
-            _oscSender.Send(message);
+            OSCMaster.SendMessageUsingClient(OSCClientName, message);
 
-            if (IsDebug)
-                Console.Log("Gyroscope : " + Input.gyro.rotationRate);
+            gyroscopeValue = Input.gyro.attitude.ToString();
         }
 
-        if (_isTouchSet)
+        if (sendTouch)
         {
+            if (!touchOSCAddress.EndsWith("/"))
+                touchOSCAddress = touchOSCAddress + "/";
+
             for (var i = 0; i < Input.touchCount; i++)
             {
-                var message = new OSCMessage("/device/touch" + i);
+                var message = new OSCMessage(touchOSCAddress + i.ToString());
                 var touch = Input.GetTouch(i);
                 message.Append(touch.position.x);
                 message.Append(touch.position.y);
-                _oscSender.Send(message);
+                OSCMaster.SendMessageUsingClient(OSCClientName, message);
 
-                if(IsDebug)
-                    Console.Log("Touch id : " + i + " " + touch.position);
+                touchCount = Input.touchCount;
             }
         }
     }
