@@ -34,10 +34,4 @@ public class SensorManagerControllable : Controllable
     public int touchCount;
     [OSCProperty]
     public string touchOSCAddress;
-
-    public override void Awake()
-    {
-        usePresets = false;
-        base.Awake();
-    }
 }
