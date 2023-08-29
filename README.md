@@ -6,6 +6,7 @@ Three data sources are available :
 
 * Accelerometer
 * Gyroscope
+* Compass
 * Touch (multitouch included)
 
 # OSC protocol syntax  
