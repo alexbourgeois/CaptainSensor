@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
-using UnityEngine.Networking.NetworkSystem;
 using UnityEngine.UI;
 using UnityOSC;
 
@@ -40,20 +39,26 @@ public class SensorManager : MonoBehaviour
 
     public bool sendAccelerometer;
     public bool sendGyroscope;
+    public bool sendCompass;
     public bool sendTouch;
 
     public string accelerometerValue;
     public string gyroscopeValue;
+    public string compassValue;
     public int touchCount;
 
     public string accelerometerOSCAddress = "/device/accelerometer";
     public string gyroscopeOSCAddress = "/device/gyroscope";
+    public string compassOSCAddress = "/device/compass";
     public string touchOSCAddress = "/device/touch/";
 
     private string OSCClientName = "CaptainSensor";
 
     void Start ()
     {
+        Input.compass.enabled = true;
+        Input.gyro.enabled = true;
+
         Connect();
     }
 
@@ -97,7 +102,6 @@ public class SensorManager : MonoBehaviour
 
         if (sendGyroscope)
         {
-            Input.gyro.enabled = true;
             var message = new OSCMessage(gyroscopeOSCAddress);
             message.Append(Input.gyro.attitude.x);
             message.Append(Input.gyro.attitude.y);
@@ -106,6 +110,16 @@ public class SensorManager : MonoBehaviour
             OSCMaster.SendMessageUsingClient(OSCClientName, message);
 
             gyroscopeValue = Input.gyro.attitude.ToString();
+        }
+
+        if (sendCompass)
+        {
+            var message = new OSCMessage(compassOSCAddress);
+            message.Append(Input.compass.trueHeading);
+            message.Append(Input.compass.magneticHeading);
+            OSCMaster.SendMessageUsingClient(OSCClientName, message);
+
+            compassValue = Input.compass.trueHeading + " " + Input.compass.magneticHeading;
         }
 
         if (sendTouch)

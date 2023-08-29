@@ -27,6 +27,14 @@ public class SensorManagerControllable : Controllable
     [OSCProperty]
     public string gyroscopeOSCAddress;
 
+    [Header("Compass")]
+    [OSCProperty]
+    public bool sendCompass;
+    [OSCProperty(isInteractible = false)]
+    public string compassValue;
+    [OSCProperty]
+    public string compassOSCAddress;
+
     [Header("Touch")]
     [OSCProperty]
     public bool sendTouch;
